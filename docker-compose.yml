@@ -2,7 +2,7 @@ name: batripal
 
 services:
   api:
-    name: batripal-api
+    container_name: batripal-api
     command: bun run start:dev
     build:
       context: .
@@ -13,7 +13,7 @@ services:
       - 6060:3000
 
   app:
-    name: batripal-app
+    container_name: batripal-app
     command: bun run start
     build:
       context: .
