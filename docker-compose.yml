@@ -1,0 +1,24 @@
+name: batripal
+
+services:
+  api:
+    name: batripal-api
+    command: bun run start:dev
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    volumes:
+      - ./backend:/app
+    ports:
+      - 6060:3000
+
+  app:
+    name: batripal-app
+    command: bun run start
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    volumes:
+      - ./frontend:/app
+    ports:
+      - 7070:3000
