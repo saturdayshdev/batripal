@@ -36,7 +36,9 @@ export class ChatGateway {
         return;
       }
 
-      socket.emit('response', {
+      this.logger.debug({ socket });
+
+      socket.emit('chat_response', {
         audioBase64: response.audioBase64,
         text: response.text,
       });
