@@ -265,7 +265,7 @@ export class AiService {
   async processUserInput(
     userInput: string,
     userContext?: string,
-  ): Promise<{ content: string; audioBuffer?: Buffer }> {
+  ): Promise<string> {
     try {
       await this.initializeConversation(userContext);
 
@@ -301,22 +301,10 @@ export class AiService {
         finalResponse = parsedResponse.content;
       }
 
-      let audioBuffer: Buffer | null = null;
-      const generateAudio = true; // You can make this configurable
-      if (generateAudio) {
-        audioBuffer = await this.createSpeech(finalResponse);
-      }
-
-      return {
-        content: finalResponse,
-        ...(audioBuffer && { audioBuffer }),
-      };
+      return finalResponse;
     } catch (error) {
       this.logger.error('Error processing user input', error);
-      return {
-        content:
-          'I apologize, but I encountered an issue processing your request. Please try again later.',
-      };
+      return 'I apologize, but I encountered an issue processing your request. Please try again later.';
     }
   }
 }
