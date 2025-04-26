@@ -9,6 +9,8 @@
     "start:debug": "bun --inspect src/main.ts",
     "start:prod": "bun run dist/src/main.js",
     "build": "nest build",
+    "drizzle:generate": "bunx drizzle-kit generate",
+    "drizzle:migrate": "bunx drizzle-kit migrate",
     "test:agents": "bun run src/ai/test-agents.ts",
     "ai:cli": "bun run src/ai/test-cli.ts"
   },
