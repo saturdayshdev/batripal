@@ -9,7 +9,11 @@ import { Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { type ChatMessage } from './chat.type';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class ChatGateway {
   private logger = new Logger(ChatGateway.name);
   constructor(private chatService: ChatService) {}
