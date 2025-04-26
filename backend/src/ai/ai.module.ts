@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AiClient } from './ai.client';
+import { AiSdk } from './ai.sdk';
+import { AiPromptsService } from './ai.prompts';
+import { AiService } from './ai.service';
 
 @Module({
-  providers: [AiClient],
+  providers: [AiSdk, AiPromptsService, AiService],
+  exports: [AiService],
 })
 export class AiModule {}
