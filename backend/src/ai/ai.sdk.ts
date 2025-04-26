@@ -52,10 +52,28 @@ export class AiSdk {
     }
   }
 
-  async addMessageToThread(threadId: string, content: string, role: 'user' | 'assistant' = 'user'): Promise<any> {
+  async addMessageToThread(
+    threadId: string, 
+    content: string, 
+    role: 'user' | 'assistant' | 'system' = 'user'
+  ): Promise<any> {
     try {
+      // The API doesn't directly support system messages, so we'll add metadata for system messages
+      if (role === 'system') {
+        this.logger.log('Adding system message to thread');
+        const message = await this.client.beta.threads.messages.create(threadId, {
+          role: 'user',
+          content: content,
+          metadata: { 
+            type: 'system'
+          }
+        });
+        return message;
+      }
+      
+      // Regular user or assistant message
       const message = await this.client.beta.threads.messages.create(threadId, {
-        role,
+        role: role as 'user' | 'assistant', // Type assertion since we've ruled out 'system'
         content,
       });
       

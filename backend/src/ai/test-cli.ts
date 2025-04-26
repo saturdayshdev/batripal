@@ -29,6 +29,8 @@ async function runCli() {
   
   console.log('✅ System initialized and ready');
   console.log('💬 Start chatting with the AI (type "exit" to quit)\n');
+  console.log('📝 Special commands:');
+  console.log('  - debug: Show all messages in the conversation\n');
   
   // User context (can be adapted as needed)
   const userContext = `
@@ -38,6 +40,9 @@ async function runCli() {
     - Current diet: pureed foods
     - Main concerns: protein intake, fatigue
   `;
+  
+  console.log(`${colors.blue}ℹ️ User context is being sent as a system message:${colors.reset}`);
+  console.log(`${colors.yellow}${userContext}${colors.reset}\n`);
   
   // Create readline interface
   const rl = readline.createInterface({
@@ -53,6 +58,13 @@ async function runCli() {
         console.log('\n👋 Goodbye!');
         rl.close();
         await app.close();
+        return;
+      }
+      
+      // Special debug command to examine thread messages
+      if (userInput.toLowerCase() === 'debug') {
+        await dumpThreadMessages(aiService);
+        processUserInput();
         return;
       }
       
@@ -102,7 +114,7 @@ async function runCli() {
           (aiService.processUserInput as PatchedFunction).__patched = true;
         }
         
-        // Process the user input
+        // Process the user input, passing the user context
         const response = await aiService.processUserInput(userInput, userContext);
         const duration = (Date.now() - startTime) / 1000;
         
@@ -112,7 +124,6 @@ async function runCli() {
         
         if (response.audioBuffer) {
           console.log(`${colors.yellow}🔊 (Audio response generated)${colors.reset}`);
-          // Here you could add code to play the audio if needed
         }
         
         console.log(); // Add a blank line for readability
@@ -128,6 +139,43 @@ async function runCli() {
   
   // Start the conversation
   processUserInput();
+}
+
+// Helper function to inspect thread messages
+async function dumpThreadMessages(aiService: any) {
+  try {
+    if (!aiService.conversationThread) {
+      console.log(`${colors.yellow}⚠️ No conversation thread available yet${colors.reset}`);
+      return;
+    }
+    
+    console.log(`\n${colors.magenta}🔍 THREAD MESSAGES ANALYSIS:${colors.reset}`);
+    console.log(`${colors.blue}============================${colors.reset}`);
+    
+    // Get a reference to the thread
+    const messages = await aiService.aiSdk.getMessages(aiService.conversationThread.id);
+    
+    if (!messages || !messages.data || messages.data.length === 0) {
+      console.log(`${colors.yellow}No messages in thread yet${colors.reset}`);
+      return;
+    }
+    
+    // Display messages
+    messages.data.forEach((msg: any, i: number) => {
+      const roleType = msg.metadata?.type === 'system' ? 'SYSTEM' : msg.role.toUpperCase();
+      const metadata = msg.metadata ? `[Metadata: ${JSON.stringify(msg.metadata)}]` : '';
+      const contentType = msg.content[0]?.type || 'unknown';
+      const content = msg.content[0]?.type === 'text' ? msg.content[0].text.value : 'Non-text content';
+      
+      console.log(`${colors.cyan}Message ${i+1} (${roleType}) ${metadata}:${colors.reset}`);
+      console.log(`${colors.yellow}${content.substring(0, 200)}${content.length > 200 ? '...' : ''}${colors.reset}`);
+      console.log(`${colors.blue}----------------------------${colors.reset}`);
+    });
+    
+    console.log(`${colors.blue}============================${colors.reset}`);
+  } catch (error) {
+    console.error(`${colors.red}❌ Error dumping messages: ${error.message}${colors.reset}`);
+  }
 }
 
 // Run the CLI

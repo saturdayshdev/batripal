@@ -28,6 +28,7 @@ export class AiService {
   private assistants: Assistants | null = null;
   private conversationThread: any = null;
   private conversationContext: ConversationContext = { messages: [] };
+  private currentUserContext: string | null = null;
 
   constructor(
     private config: ConfigService,
@@ -122,15 +123,36 @@ export class AiService {
     }
   }
 
-  private async initializeConversation(): Promise<void> {
-    if (this.conversationThread) {
-      return;
-    }
-
+  private async initializeConversation(userContext?: string): Promise<void> {
     try {
       await this.initializeAssistants();
-      this.conversationThread = await this.aiSdk.createThread();
-      this.logger.log('Conversation initialized successfully');
+      
+      if (!this.conversationThread) {
+        this.conversationThread = await this.aiSdk.createThread();
+        this.logger.log('Conversation initialized successfully');
+        
+        if (userContext) {
+          await this.aiSdk.addMessageToThread(
+            this.conversationThread.id,
+            userContext,
+            'system'
+          );
+          
+          this.currentUserContext = userContext;
+          this.logger.log('Added user context as system message during initialization');
+        }
+      } 
+      else if (userContext && userContext !== this.currentUserContext) {
+        this.logger.log('User context changed, adding new system message');
+        
+        await this.aiSdk.addMessageToThread(
+          this.conversationThread.id,
+          userContext,
+          'system'
+        );
+        
+        this.currentUserContext = userContext;
+      }
     } catch (error) {
       this.logger.error('Failed to initialize conversation', error);
       throw error;
@@ -228,15 +250,7 @@ export class AiService {
     userContext?: string
   ): Promise<{ content: string; audioBuffer?: Buffer }> {
     try {
-      await this.initializeConversation();
-      
-      if (userContext) {
-        await this.aiSdk.addMessageToThread(
-          this.conversationThread.id,
-          userContext,
-          'user'
-        );
-      }
+      await this.initializeConversation(userContext);
       
       await this.aiSdk.addMessageToThread(
         this.conversationThread.id,
