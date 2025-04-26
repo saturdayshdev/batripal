@@ -48,7 +48,7 @@ export function SurgeryForm() {
             <User className="h-4 w-4" />
             <Label htmlFor="name">Your Name</Label>
           </div>
-          <Input id="name" placeholder="Enter your name" />
+          <Input name="name" placeholder="Enter your name" />
         </div>
 
         <div className="space-y-2">
@@ -87,7 +87,7 @@ export function SurgeryForm() {
             <Label htmlFor="weight">Current Weight (kg)</Label>
           </div>
           <Input
-            id="weight"
+            name="weight"
             type="number"
             placeholder="Enter your current weight"
           />
@@ -106,7 +106,7 @@ export function SurgeryForm() {
         <div className="space-y-2">
           <Label htmlFor="additionalInfo">Additional Information</Label>
           <Textarea
-            id="additionalInfo"
+            name="additionalInfo"
             placeholder="Share any relevant information about your journey, food intolerances, goals, etc."
             className="min-h-[150px]"
           />

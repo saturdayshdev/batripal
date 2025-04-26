@@ -15,6 +15,14 @@ interface SurgeryDataProps {
 
 export async function insertSurgeryData(input: SurgeryDataProps) {
   const { id, name, surgeryDate, weight, surgeryType, additionalInfo } = input;
+  console.log("Inserting data:", {
+    id,
+    name,
+    surgeryDate,
+    weight,
+    surgeryType,
+    additionalInfo,
+  });
 
   try {
     await db.insert(surgeries).values({
