@@ -28,3 +28,5 @@ export const surgeries = pgTable('surgeries', {
   createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
 });
+
+export type UserContext = typeof surgeries.$inferSelect;
