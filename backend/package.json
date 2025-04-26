@@ -8,7 +8,9 @@
     "start:dev": "bun --hot src/main.ts",
     "start:debug": "bun --inspect src/main.ts",
     "start:prod": "bun run dist/src/main.js",
-    "build": "nest build"
+    "build": "nest build",
+    "test:agents": "bun run src/ai/test-agents.ts",
+    "ai:cli": "bun run src/ai/test-cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.0",
