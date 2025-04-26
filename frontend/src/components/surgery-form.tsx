@@ -20,12 +20,13 @@ import { insertSurgeryData } from "@/app/_lib/query";
 
 export function SurgeryForm() {
   const [surgeryDate, setDate] = useState<Date>();
+  const [surgeryType, setSurgeryType] = useState<"sleve" | "bypass">("sleve");
   const [isPending, startTransition] = useTransition();
 
   async function handleSubmit(formData: FormData) {
     const name = formData.get("name") as string;
-    const weight = formData.get("weight") as number | null;
-    const surgeryType = formData.get("surgeryType") as "sleve" | "bypass";
+    const weightValue = formData.get("weight") as string;
+    const weight = weightValue && weightValue.trim() !== "" ? parseFloat(weightValue) : null;
     const additionalInfo = formData.get("additionalInfo") as string;
 
     startTransition(() => {
@@ -95,12 +96,13 @@ export function SurgeryForm() {
 
         <div className="space-y-2">
           <Label htmlFor="surgeryType">Surgery Type</Label>
-          <Tabs defaultValue="sleve">
+          <Tabs defaultValue="sleve" value={surgeryType} onValueChange={(value) => setSurgeryType(value as "sleve" | "bypass")}>
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="sleve">Sleve</TabsTrigger>
               <TabsTrigger value="bypass">Bypass</TabsTrigger>
             </TabsList>
           </Tabs>
+          <input type="hidden" name="surgeryType" value={surgeryType} />
         </div>
 
         <div className="space-y-2">

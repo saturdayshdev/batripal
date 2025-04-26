@@ -10,7 +10,7 @@ interface SurgeryDataProps {
   name: string;
   surgeryDate: Date | undefined;
   weight: number | null;
-  surgeryType: "sleve" | "bypass";
+  surgeryType: "sleve" | "bypass" | null;
   additionalInfo: string;
 }
 
