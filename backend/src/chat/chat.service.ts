@@ -31,7 +31,7 @@ export class ChatService {
   }
 
   private async generateResponse(transcript: string): Promise<string> {
-    return 'this is where we do agent stuff';
+    return transcript; // Placeholder for actual response generation logic
   }
 
   async handleChatMessage(
@@ -57,6 +57,11 @@ export class ChatService {
     if (!speech) {
       throw new Error('Speech generation failed');
     }
+
+    this.logger.debug({
+      audioBase64: speech.toString('base64'),
+      text: response,
+    });
 
     return {
       audioBase64: speech.toString('base64'),

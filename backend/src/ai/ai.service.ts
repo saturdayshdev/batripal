@@ -72,6 +72,7 @@ export class AiService {
         response_format: 'mp3',
       });
 
+      this.logger.log('Speech creation successful');
       return Buffer.from(await response.arrayBuffer());
     } catch (error) {
       this.logger.error('Error creating speech', error);
@@ -91,7 +92,7 @@ export class AiService {
         this.aiPrompts.getPrompt(AiPrompt.TRIAGE),
         'gpt-4.1-nano',
         [{ type: 'code_interpreter' }],
-        { type: 'json_object' }
+        { type: 'json_object' },
       );
 
       const dieteticAssistant = await this.aiSdk.createAssistant(
@@ -99,7 +100,7 @@ export class AiService {
         'Provides nutritional guidance for bariatric patients',
         this.aiPrompts.getPrompt(AiPrompt.DIETETIC),
         'gpt-4.1-nano',
-        [{ type: 'code_interpreter' }]
+        [{ type: 'code_interpreter' }],
       );
 
       const psychotherapyAssistant = await this.aiSdk.createAssistant(
@@ -107,13 +108,13 @@ export class AiService {
         'Provides psychological support for bariatric patients',
         this.aiPrompts.getPrompt(AiPrompt.PSYCHOTHERAPY),
         'gpt-4.1-nano',
-        [{ type: 'code_interpreter' }]
+        [{ type: 'code_interpreter' }],
       );
 
       this.assistants = {
         triage: triageAssistant,
         dietetic: dieteticAssistant,
-        psychotherapy: psychotherapyAssistant
+        psychotherapy: psychotherapyAssistant,
       };
 
       this.logger.log('All assistants initialized successfully');
@@ -126,31 +127,32 @@ export class AiService {
   private async initializeConversation(userContext?: string): Promise<void> {
     try {
       await this.initializeAssistants();
-      
+
       if (!this.conversationThread) {
         this.conversationThread = await this.aiSdk.createThread();
         this.logger.log('Conversation initialized successfully');
-        
+
         if (userContext) {
           await this.aiSdk.addMessageToThread(
             this.conversationThread.id,
             userContext,
-            'system'
+            'system',
           );
-          
+
           this.currentUserContext = userContext;
-          this.logger.log('Added user context as system message during initialization');
+          this.logger.log(
+            'Added user context as system message during initialization',
+          );
         }
-      } 
-      else if (userContext && userContext !== this.currentUserContext) {
+      } else if (userContext && userContext !== this.currentUserContext) {
         this.logger.log('User context changed, adding new system message');
-        
+
         await this.aiSdk.addMessageToThread(
           this.conversationThread.id,
           userContext,
-          'system'
+          'system',
         );
-        
+
         this.currentUserContext = userContext;
       }
     } catch (error) {
@@ -161,60 +163,74 @@ export class AiService {
 
   private async parseAgentResponse(response: string): Promise<AgentResponse> {
     try {
-      const cleanedResponse = response.replace(/```json\s*([\s\S]*?)\s*```/, '$1').trim();
+      const cleanedResponse = response
+        .replace(/```json\s*([\s\S]*?)\s*```/, '$1')
+        .trim();
       const parsed = JSON.parse(cleanedResponse);
-      
+
       if (!parsed.agent || !parsed.content) {
         throw new Error('Invalid response structure');
       }
-      
+
       if (!Object.values(AgentType).includes(parsed.agent)) {
         throw new Error('Invalid agent type');
       }
-      
+
       return {
         agent: parsed.agent,
-        content: parsed.content
+        content: parsed.content,
       };
     } catch (error) {
       this.logger.error('Error parsing agent response', error);
-      
+
       return {
         agent: AgentType.TRIAGE,
-        content: 'I apologize, but there was an issue processing your request. Could you please rephrase your question?'
+        content:
+          'I apologize, but there was an issue processing your request. Could you please rephrase your question?',
       };
     }
   }
 
-  private async runAssistantWithPolling(assistantId: string, agentType: AgentType): Promise<string> {
-    const run = await this.aiSdk.runAssistant(this.conversationThread.id, assistantId);
-    
+  private async runAssistantWithPolling(
+    assistantId: string,
+    agentType: AgentType,
+  ): Promise<string> {
+    const run = await this.aiSdk.runAssistant(
+      this.conversationThread.id,
+      assistantId,
+    );
+
     let completed = false;
     while (!completed) {
-      const runStatus = await this.aiSdk.getRunStatus(this.conversationThread.id, run.id);
-      
+      const runStatus = await this.aiSdk.getRunStatus(
+        this.conversationThread.id,
+        run.id,
+      );
+
       if (runStatus.status === 'completed') {
         completed = true;
       } else if (runStatus.status === 'failed') {
-        throw new Error(`Run failed: ${runStatus.last_error?.message || 'Unknown error'}`);
+        throw new Error(
+          `Run failed: ${runStatus.last_error?.message || 'Unknown error'}`,
+        );
       } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
-    
+
     const messages = await this.aiSdk.getMessages(this.conversationThread.id);
     const latestMessage = messages.data[0];
-    
+
     if (!latestMessage || latestMessage.content[0]?.type !== 'text') {
       throw new Error('Invalid response format');
     }
-    
+
     this.conversationContext.messages.push({
       role: 'assistant',
       content: latestMessage.content[0].text.value,
-      specialist: agentType
+      specialist: agentType,
     });
-    
+
     return latestMessage.content[0].text.value;
   }
 
@@ -222,79 +238,84 @@ export class AiService {
     specialistType: AgentType.DIETETIC | AgentType.PSYCHOTHERAPY,
     userMessage: string,
   ): Promise<string> {
-    const specialistAssistant = specialistType === AgentType.DIETETIC 
-      ? this.assistants?.dietetic 
-      : this.assistants?.psychotherapy;
-    
+    const specialistAssistant =
+      specialistType === AgentType.DIETETIC
+        ? this.assistants?.dietetic
+        : this.assistants?.psychotherapy;
+
     if (!specialistAssistant) {
       throw new Error(`${specialistType} assistant not initialized`);
     }
 
     const specialistResponse = await this.runAssistantWithPolling(
       specialistAssistant.id,
-      specialistType
+      specialistType,
     );
-    
+
     const context = `Previous user message: "${userMessage}"\nSpecialist (${specialistType}) response: "${specialistResponse}"`;
     await this.aiSdk.addMessageToThread(
       this.conversationThread.id,
       context,
-      'assistant'
+      'assistant',
     );
-    
+
     return specialistResponse;
   }
 
   async processUserInput(
     userInput: string,
-    userContext?: string
+    userContext?: string,
   ): Promise<{ content: string; audioBuffer?: Buffer }> {
     try {
       await this.initializeConversation(userContext);
-      
+
       await this.aiSdk.addMessageToThread(
         this.conversationThread.id,
         userInput,
-        'user'
+        'user',
       );
-      
+
       this.conversationContext.messages.push({
         role: 'user',
-        content: userInput
+        content: userInput,
       });
-      
+
       const triageResponse = await this.runAssistantWithPolling(
         this.assistants?.triage.id,
-        AgentType.TRIAGE
+        AgentType.TRIAGE,
       );
-      
+
       const parsedResponse = await this.parseAgentResponse(triageResponse);
-      
+
       let finalResponse: string;
-      
-      if (parsedResponse.agent === AgentType.DIETETIC || parsedResponse.agent === AgentType.PSYCHOTHERAPY) {
+
+      if (
+        parsedResponse.agent === AgentType.DIETETIC ||
+        parsedResponse.agent === AgentType.PSYCHOTHERAPY
+      ) {
         finalResponse = await this.processWithSpecialist(
           parsedResponse.agent,
-          userInput
+          userInput,
         );
       } else {
         finalResponse = parsedResponse.content;
       }
-      
+
       let audioBuffer: Buffer | null = null;
       const generateAudio = true; // You can make this configurable
       if (generateAudio) {
         audioBuffer = await this.createSpeech(finalResponse);
       }
-      
+
       return {
         content: finalResponse,
-        ...(audioBuffer && { audioBuffer })
+        ...(audioBuffer && { audioBuffer }),
       };
     } catch (error) {
       this.logger.error('Error processing user input', error);
       return {
-        content: 'I apologize, but I encountered an issue processing your request. Please try again later.'
+        content:
+          'I apologize, but I encountered an issue processing your request. Please try again later.',
       };
     }
   }
