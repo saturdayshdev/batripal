@@ -10,7 +10,12 @@ interface ChatMessageProps {
   avatarUrl?: string;
 }
 
-export function ChatMessage({ isUser, text, agent, avatarUrl }: ChatMessageProps) {
+export function ChatMessage({
+  isUser,
+  text,
+  agent,
+  avatarUrl,
+}: ChatMessageProps) {
   // Wybieramy odpowiedni kolor awatara w zależności od agenta
   const getAvatarColorClass = () => {
     if (agent === "triage") return "bg-blue-100";
@@ -29,12 +34,11 @@ export function ChatMessage({ isUser, text, agent, avatarUrl }: ChatMessageProps
 
   return (
     <div
-      className={`flex ${
-        isUser ? "justify-end" : "justify-start"
-      } mb-4 gap-2`}
+      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 gap-2`}
     >
       {!isUser && (
         <Avatar className={`h-10 w-10 ${getAvatarColorClass()}`}>
+          <AvatarImage src="/logo.png" alt="Agent Avatar" />
           <AvatarFallback>{getAvatarInitials()}</AvatarFallback>
         </Avatar>
       )}
@@ -57,12 +61,14 @@ export function ChatMessage({ isUser, text, agent, avatarUrl }: ChatMessageProps
 }
 
 export function ChatMessages() {
-  const [messages, setMessages] = useState<Array<{ isUser: boolean; text: string; agent?: string }>>([
-    { 
-      isUser: false, 
+  const [messages, setMessages] = useState<
+    Array<{ isUser: boolean; text: string; agent?: string }>
+  >([
+    {
+      isUser: false,
       text: "Hello! I'm Batripal, your bariatric support assistant. How can I help with your post-surgery journey today?",
-      agent: "triage" 
-    }
+      agent: "triage",
+    },
   ]);
 
   // This would normally come from props or context
@@ -72,24 +78,27 @@ export function ChatMessages() {
 
   // Listen for socket messages
   useEffect(() => {
-    const handleChatResponse = (response: { 
-      text: string; 
+    const handleChatResponse = (response: {
+      text: string;
       audioBase64?: string;
-      agent?: string; 
+      agent?: string;
     }) => {
       console.log("Adding assistant message:", response);
-      
+
       // Parsuj response.text żeby sprawdzić czy zawiera informacje o agencie
       try {
         // Sprawdź czy to jest format JSON
-        if (response.text.includes('"agent"') && response.text.includes('"content"')) {
-          const jsonStart = response.text.indexOf('{');
-          const jsonEnd = response.text.lastIndexOf('}') + 1;
-          
+        if (
+          response.text.includes('"agent"') &&
+          response.text.includes('"content"')
+        ) {
+          const jsonStart = response.text.indexOf("{");
+          const jsonEnd = response.text.lastIndexOf("}") + 1;
+
           if (jsonStart >= 0 && jsonEnd > jsonStart) {
             const jsonStr = response.text.substring(jsonStart, jsonEnd);
             const parsed = JSON.parse(jsonStr);
-            
+
             if (parsed.agent && parsed.content) {
               // Dodaj wiadomość z agentem i treścią
               addMessage(parsed.content, false, parsed.agent);
@@ -100,7 +109,7 @@ export function ChatMessages() {
       } catch (e) {
         console.log("Not a valid JSON in response text");
       }
-      
+
       // Dodaj oryginalną wiadomość, jeśli nie wykryto formatu JSON
       addMessage(response.text, false, response.agent || "triage");
     };
@@ -113,12 +122,15 @@ export function ChatMessages() {
     // Słuchamy zdarzenia odpowiedzi asystenta
     const responseHandler = (e: CustomEvent) => handleChatResponse(e.detail);
     window.addEventListener("chat_response", responseHandler as EventListener);
-    
+
     // Słuchamy zdarzenia wiadomości użytkownika, ale ich nie wyświetlamy
     window.addEventListener("user_message", handleUserMessage);
 
     return () => {
-      window.removeEventListener("chat_response", responseHandler as EventListener);
+      window.removeEventListener(
+        "chat_response",
+        responseHandler as EventListener
+      );
       window.removeEventListener("user_message", handleUserMessage);
     };
   }, []);
@@ -126,7 +138,10 @@ export function ChatMessages() {
   return (
     <div className="flex flex-col space-y-4 p-4">
       {messages
-        .filter(message => !message.isUser && (!message.agent || message.agent === "triage")) // Pokazujemy tylko wiadomości od triageAgent
+        .filter(
+          (message) =>
+            !message.isUser && (!message.agent || message.agent === "triage")
+        ) // Pokazujemy tylko wiadomości od triageAgent
         .map((message, index) => (
           <ChatMessage
             key={index}
@@ -137,4 +152,4 @@ export function ChatMessages() {
         ))}
     </div>
   );
-} 
+}
