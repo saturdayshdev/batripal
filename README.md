@@ -1,4 +1,4 @@
-### BatriPal
+### BatriPal - [DEMO](https://youtu.be/TOVwOEgDfE4?si=6eXeR6X_iwTlHa76)
 
 A voice-first personal companion to guide individuals on their bariatric journey. Every year, over 600,000 people undergo bariatric surgery, a transformative but often challenging process. Bariatric surgery requires not only physical adjustments to diet and lifestyle but also emotional support through the recovery period. Yet, this group remains largely underserved in terms of tailored support systems.
 
