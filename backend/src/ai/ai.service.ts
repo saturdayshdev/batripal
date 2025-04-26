@@ -44,4 +44,20 @@ export class AiService {
       return null;
     }
   }
+
+  async createSpeech(text: string): Promise<Buffer | null> {
+    try {
+      const response = await this.aiSdk.client.audio.speech.create({
+        model: this.config.env.AI_TTS_MODEL,
+        voice: this.config.env.AI_TTS_VOICE,
+        input: text,
+        response_format: 'mp3',
+      });
+
+      return Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      this.logger.error('Error creating speech', error);
+      return null;
+    }
+  }
 }
