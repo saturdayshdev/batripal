@@ -31,7 +31,7 @@ export class ChatService {
   }
 
   private async generateResponse(transcript: string): Promise<string> {
-    return transcript; // Placeholder for actual response generation logic
+    return await this.aiService.processUserInput(transcript);
   }
 
   async handleChatMessage(
