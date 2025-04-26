@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { surgeries } from "../../../drizzle/schema";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 
 interface SurgeryDataProps {
   id: string;
@@ -36,6 +37,31 @@ export async function insertSurgeryData(input: SurgeryDataProps) {
     redirect(`/chat/${id}`);
   } catch (error) {
     console.error("Error inserting data:", error);
+    throw error;
+  }
+}
+
+export async function selectNamebyId(id: string) {
+  try {
+    const result = await db
+      .select({ name: surgeries.name })
+      .from(surgeries)
+      .where(eq(surgeries.id, id))
+      .limit(1);
+
+    const name = result[0];
+
+    if (name === undefined) {
+      throw new Error("Name not found");
+    }
+
+    if (name) {
+      return name;
+    } else {
+      throw new Error("No data found");
+    }
+  } catch (error) {
+    console.error("Error fetching name by ID:", error);
     throw error;
   }
 }
