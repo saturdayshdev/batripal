@@ -1,29 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { type UserContext } from '@drizzle/schema';
 import { AiService } from '@ai/ai.service';
 import { type ChatResponse } from './chat.type';
+import { ChatRepository } from './chat.repository';
 
 @Injectable()
 export class ChatService {
   private logger = new Logger(ChatService.name);
-  constructor(private aiService: AiService) {}
+  constructor(
+    private repository: ChatRepository,
+    private aiService: AiService,
+  ) {}
 
-  private async createUserContext(userId: string): Promise<unknown> {
-    return {};
+  private async getUserContext(userId: string): Promise<UserContext> {
+    const userCtx = await this.repository.fetchUserContext(userId);
+    if (!userCtx) {
+      throw new Error('User context not found');
+    }
+
+    return userCtx;
   }
 
-  private async fetchUserContext(userId: string): Promise<unknown> {
-    return {};
-  }
+  private async updateUserContext(userId: string, ctx: Partial<UserContext>) {
+    const userCtx = await this.repository.updateUserContext(userId, ctx);
+    if (!userCtx) {
+      throw new Error('Failed to update user context');
+    }
 
-  private async updateUserContext(
-    userId: string,
-    context: unknown,
-  ): Promise<unknown> {
-    return {};
-  }
-
-  private async handleUserContext(userId: string): Promise<unknown> {
-    return {};
+    return userCtx;
   }
 
   private async generateResponse(transcript: string): Promise<string> {
@@ -34,9 +38,9 @@ export class ChatService {
     userId: string,
     audio: Buffer,
   ): Promise<ChatResponse> {
-    const userCtx = await this.handleUserContext(userId);
+    const userCtx = await this.getUserContext(userId);
     if (!userCtx) {
-      throw new Error('User context not handled');
+      throw new Error('User context not found');
     }
 
     const transcript = await this.aiService.transcribe(audio);
