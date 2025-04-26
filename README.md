@@ -7,8 +7,7 @@ Batripal addresses both the nutritional and emotional needs of post-op bariatric
 I am personally connected to this project: I underwent bariatric surgery a year ago and lost 70 kg in 9 months. This journey has inspired me to build a tool that I wish I had during my own recovery.
 
 ### Stack
-
-**Backend**: Node.js, NestJS, WebSockets
-**Frontend**: NextJS, WebSockets
-**Database**: PostgreSQL
-**AI**: OpenAI's Assistants, STT and TTS
+- **Backend**: Node.js, NestJS, WebSockets
+- **Frontend**: NextJS, WebSockets
+- **Database**: PostgreSQL
+- **AI**: OpenAI's Assistants, STT and TTS
