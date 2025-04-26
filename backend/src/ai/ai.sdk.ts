@@ -3,15 +3,15 @@ import { ConfigService } from '@config/config.service';
 import OpenAI from 'openai';
 
 @Injectable()
-export class AiClient {
-  private logger = new Logger(AiClient.name);
+export class AiSdk {
+  private logger = new Logger(AiSdk.name);
   public client: OpenAI;
 
   constructor(private config: ConfigService) {
     this.client = new OpenAI({
-      apiKey: this.config.env.OPENAI_API_KEY,
+      apiKey: this.config.env.AI_API_KEY,
     });
 
-    this.logger.log('AI client initialized');
+    this.logger.log('AI SDK initialized');
   }
 }
